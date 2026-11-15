@@ -1,0 +1,64 @@
+2026-11-15 16:47:32,827 - hexstrike_server - INFO - 🔧 Process pool worker 0 started
+2026-11-15 16:47:32,827 - hexstrike_server - INFO - 🔧 Process pool worker 1 started
+2026-11-15 16:47:32,827 - hexstrike_server - INFO - 🔧 Process pool worker 2 started
+2026-11-15 16:47:32,828 - hexstrike_server - INFO - 🔧 Process pool worker 3 started
+2026-11-15 16:55:13,452 - __main__ - INFO - 🔧 Process pool worker 0 started
+2026-11-15 16:55:13,452 - __main__ - INFO - 🔧 Process pool worker 1 started
+2026-11-15 16:55:13,452 - __main__ - INFO - 🔧 Process pool worker 2 started
+2026-11-15 16:55:13,453 - __main__ - INFO - 🔧 Process pool worker 3 started
+2026-11-15 16:55:13,556 - __main__ - INFO - [38;5;46m[1m╭─────────────────────────────────────────────────────────────────────────────╮[0m
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m│[0m [38;5;51m🚀 Starting HexStrike AI Tools API Server[0m
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m├─────────────────────────────────────────────────────────────────────────────┤[0m
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m│[0m [38;5;208m🌐 Port:[0m 8888
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m│[0m [38;5;208m🔧 Debug Mode:[0m False
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m│[0m [38;5;129m💾 Cache Size:[0m 1000 | TTL: 3600s
+2026-11-15 16:55:13,556 - __main__ - INFO - [1m│[0m [38;5;240m⏱️  Command Timeout:[0m 300s
+2026-11-15 16:55:13,557 - __main__ - INFO - [1m│[0m [38;5;46m✨ Enhanced Visual Engine:[0m Active
+2026-11-15 16:55:13,557 - __main__ - INFO - [38;5;46m[1m╰─────────────────────────────────────────────────────────────────────────────╯[0m
+2026-11-15 17:18:17,550 - hexstrike - INFO - 🔧 Process pool worker 0 started
+2026-11-15 17:18:17,550 - hexstrike - INFO - 🔧 Process pool worker 1 started
+2026-11-15 17:18:17,551 - hexstrike - INFO - 🔧 Process pool worker 2 started
+2026-11-15 17:18:17,551 - hexstrike - INFO - 🔧 Process pool worker 3 started
+2026-11-15 17:18:19,130 - hexstrike - INFO - 🔍 Investigating domain: example.com (objective=comprehensive, execute_tools=False)
+2026-11-15 17:18:37,183 - hexstrike - ERROR - 💥 Error in domain investigation: BugBountyTarget() takes no arguments
+2026-11-15 17:27:39,676 - hexstrike - INFO - 🔧 Process pool worker 0 started
+2026-11-15 17:27:39,677 - hexstrike - INFO - 🔧 Process pool worker 1 started
+2026-11-15 17:27:39,677 - hexstrike - INFO - 🔧 Process pool worker 2 started
+2026-11-15 17:27:39,678 - hexstrike - INFO - 🔧 Process pool worker 3 started
+2026-11-15 17:31:40,632 - hexstrike - INFO - 🔧 Process pool worker 0 started
+2026-11-15 17:31:40,632 - hexstrike - INFO - 🔧 Process pool worker 1 started
+2026-11-15 17:31:40,633 - hexstrike - INFO - 🔧 Process pool worker 2 started
+2026-11-15 17:31:40,634 - hexstrike - INFO - 🔧 Process pool worker 3 started
+2026-11-15 17:31:42,144 - hexstrike - INFO - 🔍 Investigating domain: example.com (objective=comprehensive, execute_tools=False)
+2026-11-15 17:31:42,166 - hexstrike - INFO - 🔍 Investigating domain: example.com (objective=comprehensive, execute_tools=False)
+2026-11-15 17:31:42,166 - hexstrike - INFO - 🔍 Investigating domain: api.example.com (objective=comprehensive, execute_tools=False)
+2026-11-15 17:31:42,167 - hexstrike - INFO - 🔍 Investigating domain: auth.example.org (objective=comprehensive, execute_tools=False)
+2026-11-15 17:31:42,196 - hexstrike - INFO - 🌐 Multi-domain execution for analyze_target across 2 targets (parallel=True, max_workers=2)
+2026-11-15 17:31:42,197 - hexstrike - INFO - 🧠 Analyzing target: example.com
+2026-11-15 17:31:42,197 - hexstrike - INFO - 🧠 Analyzing target: example.org
+2026-11-15 17:31:42,210 - hexstrike - INFO - ✅ Target analysis completed for example.com
+2026-11-15 17:31:42,210 - hexstrike - INFO - 📊 Target type: web_application, Risk level: high
+2026-11-15 17:31:42,211 - hexstrike - INFO - ✅ Target analysis completed for example.org
+2026-11-15 17:31:42,211 - hexstrike - INFO - 📊 Target type: web_application, Risk level: high
+2026-11-15 17:31:42,212 - hexstrike - INFO - 🌐 Multi-domain execution for create_reconnaissance_workflow across 2 targets (parallel=True, max_workers=2)
+2026-11-15 17:31:42,212 - hexstrike - INFO - 🎯 Creating reconnaissance workflow for example.com
+2026-11-15 17:31:42,212 - hexstrike - INFO - 🎯 Creating reconnaissance workflow for sub.example.com
+2026-11-15 17:31:42,212 - hexstrike - INFO - ✅ Reconnaissance workflow created for example.com
+2026-11-15 17:31:42,213 - hexstrike - INFO - ✅ Reconnaissance workflow created for sub.example.com
+2026-11-15 17:33:35,869 - hexstrike - INFO - 🔧 Process pool worker 0 started
+2026-11-15 17:33:35,870 - hexstrike - INFO - 🔧 Process pool worker 1 started
+2026-11-15 17:33:35,870 - hexstrike - INFO - 🔧 Process pool worker 2 started
+2026-11-15 17:33:35,871 - hexstrike - INFO - 🔧 Process pool worker 3 started
+2026-11-15 17:36:14,437 - hexstrike - INFO - 🔧 Process pool worker 0 started
+2026-11-15 17:36:14,437 - hexstrike - INFO - 🔧 Process pool worker 1 started
+2026-11-15 17:36:14,437 - hexstrike - INFO - 🔧 Process pool worker 2 started
+2026-11-15 17:36:14,438 - hexstrike - INFO - 🔧 Process pool worker 3 started
+2026-11-15 17:36:15,555 - hexstrike - INFO - [38;5;46m[1m╭─────────────────────────────────────────────────────────────────────────────╮[0m
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;51m🚀 Starting HexStrike AI FastAPI Server[0m
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m├─────────────────────────────────────────────────────────────────────────────┤[0m
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;208m🌐 Port:[0m 8888
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;208m🔧 Debug Mode:[0m False
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;129m💾 Cache Size:[0m 1000 | TTL: 3600s
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;240m⏱️  Command Timeout:[0m 300s
+2026-11-15 17:36:15,556 - hexstrike - INFO - [1m│[0m [38;5;46m✨ Multi-Domain Investigation & Visual Engine:[0m Active
+2026-11-15 17:36:15,556 - hexstrike - INFO - [38;5;46m[1m╰─────────────────────────────────────────────────────────────────────────────╯[0m
