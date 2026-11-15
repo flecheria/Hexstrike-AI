@@ -264,6 +264,62 @@ class HexStrikeClient:
         """
         return self.safe_get("health")
 
+    def get_available_tools(
+        self,
+        category: str = "",
+        installed_only: bool = False,
+        enabled_only: bool = False,
+        profile: str = "",
+        refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Retrieve the configurable tool manifest and installation status from the server,
+        falling back to the local ToolRegistry if the remote server is unreachable.
+        """
+        params = {
+            "category": category,
+            "installed_only": installed_only,
+            "enabled_only": enabled_only,
+            "profile": profile,
+            "refresh": refresh,
+        }
+        res = self.safe_get("api/tools/available", params=params)
+        if res.get("success", False):
+            return res
+        try:
+            from src.core.tool_registry import tool_registry
+            return tool_registry.get_registry_report(
+                category=category or None,
+                installed_only=installed_only,
+                enabled_only=enabled_only,
+                profile=profile or None,
+                refresh=refresh,
+            )
+        except Exception:
+            return res
+
+    def check_tool(self, tool_name: str, refresh: bool = False) -> Dict[str, Any]:
+        """Check whether a specific CLI tool or MCP tool is installed."""
+        res = self.safe_get("api/tools/check", params={"tool_name": tool_name, "refresh": refresh})
+        if res.get("success", False):
+            return res
+        try:
+            from src.core.tool_registry import tool_registry
+            return tool_registry.check_tool(tool_name, refresh=refresh)
+        except Exception:
+            return res
+
+    def get_tool_profiles(self, refresh: bool = False) -> Dict[str, Any]:
+        """Retrieve container build profiles and their included tools."""
+        res = self.safe_get("api/tools/profiles", params={"refresh": refresh})
+        if res.get("success", False):
+            return res
+        try:
+            from src.core.tool_registry import tool_registry
+            return tool_registry.get_profiles(refresh=refresh)
+        except Exception:
+            return res
+
 def setup_mcp_server(hexstrike_client: HexStrikeClient) -> FastMCP:
     """
     Set up the MCP server with all enhanced tool functions
@@ -5530,6 +5586,82 @@ def setup_mcp_server(hexstrike_client: HexStrikeClient) -> FastMCP:
         logger.info(f"{HexStrikeColors.CYBER_ORANGE}🚀 Running batch tools ({tools}) across domain(s): {domains}{HexStrikeColors.RESET}")
         return hexstrike_client.safe_post("api/investigation/batch-tool", data)
 
+    # ============================================================================
+    # CONFIGURABLE TOOL REGISTRY & CONTAINER CAPABILITY DISCOVERY
+    # ============================================================================
+
+    @mcp.tool()
+    def get_available_tools(
+        category: str = "",
+        installed_only: bool = True,
+        enabled_only: bool = False,
+        profile: str = "",
+        refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Get the list of available security tools installed on the HexStrike server/container
+        and their mapped MCP tool functions. Call this first to know which network,
+        reconnaissance, and scanning tools are currently installed and ready to run.
+
+        Args:
+            category: Optional category filter ("network", "reconnaissance", "scanning", "web", "auth", "binary", "forensics", "cloud")
+            installed_only: Return only tools that are currently installed and ready (default True)
+            enabled_only: Return only tools enabled in config/tools_manifest.json
+            profile: Optional container build profile filter (e.g. "recon_network_scan", "minimal", "full")
+            refresh: Force rescan of system binaries
+
+        Returns:
+            Structured manifest of installed CLI tools, mapped MCP functions, category breakdown, and active container profile
+        """
+        logger.info(f"{HexStrikeColors.NEON_BLUE}🧰 Querying available tools (category={category or 'all'}, installed_only={installed_only}){HexStrikeColors.RESET}")
+        return hexstrike_client.get_available_tools(
+            category=category,
+            installed_only=installed_only,
+            enabled_only=enabled_only,
+            profile=profile,
+            refresh=refresh,
+        )
+
+    @mcp.tool()
+    def check_tool_availability(tool_name: str, refresh: bool = False) -> Dict[str, Any]:
+        """
+        Check whether a specific CLI security tool (e.g. "nmap", "subfinder", "nuclei")
+        or MCP tool function (e.g. "nmap_scan", "subfinder_scan") is installed on the
+        HexStrike server/container, and get installed alternatives if it is missing.
+
+        Args:
+            tool_name: CLI tool binary name or MCP tool function name to check
+            refresh: Force rescan of system binaries
+
+        Returns:
+            Installation status, binary path, mapped MCP tools, installed alternatives in the same category, and container build hint
+        """
+        logger.info(f"{HexStrikeColors.NEON_BLUE}🔎 Checking availability of tool: {tool_name}{HexStrikeColors.RESET}")
+        return hexstrike_client.check_tool(tool_name=tool_name, refresh=refresh)
+
+    @mcp.tool()
+    def get_tool_profiles(refresh: bool = False) -> Dict[str, Any]:
+        """
+        List container build profiles (minimal, recon_network_scan, web_security,
+        auth_password, binary_forensics, cloud_security, full) and which tools
+        are included and installed in each profile.
+
+        Args:
+            refresh: Force rescan of system binaries
+
+        Returns:
+            Container build profiles, tool lists, and Docker/Podman build instructions
+        """
+        logger.info(f"{HexStrikeColors.NEON_BLUE}📦 Retrieving container tool profiles{HexStrikeColors.RESET}")
+        return hexstrike_client.get_tool_profiles(refresh=refresh)
+
+    @mcp.resource("hexstrike://tools/available")
+    def available_tools_resource() -> str:
+        """MCP Resource providing the JSON manifest of available tools on the HexStrike server."""
+        import json as _json
+        report = hexstrike_client.get_available_tools(installed_only=False)
+        return _json.dumps(report, indent=2)
+
     return mcp
 
 def parse_args():
@@ -5567,7 +5699,14 @@ def main():
         else:
             logger.info(f"🎯 Successfully connected to HexStrike AI API server at {args.server}")
             logger.info(f"🏥 Server health status: {health['status']}")
-            logger.info(f"📊 Version: {health.get('version', 'unknown')}")
+            logger.info(f"📊 Version: {health.get('version', 'unknown')} | Profile: {health.get('active_profile', 'recon_network_scan')}")
+            manifest_summary = health.get("manifest_summary", {})
+            if manifest_summary:
+                logger.info(
+                    f"🧰 Manifest tools installed: {manifest_summary.get('installed_count', 0)}/"
+                    f"{manifest_summary.get('enabled_in_manifest', 0)} enabled "
+                    f"({manifest_summary.get('available_cli_mcp_tools_count', 0)} CLI MCP tools ready)"
+                )
             if not health.get("all_essential_tools_available", False):
                 logger.warning("⚠️  Not all essential tools are available on the HexStrike server")
                 missing_tools = [tool for tool, available in health.get("tools_status", {}).items() if not available]

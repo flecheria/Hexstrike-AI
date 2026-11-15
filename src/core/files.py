@@ -12,14 +12,14 @@ import subprocess
 from typing import Dict, Any, Optional
 import venv
 
-from src.config import logger
+from src.config import logger, FILES_DIR, ENVS_DIR
 
 class PythonEnvironmentManager:
     """Manage Python virtual environments and dependencies"""
 
-    def __init__(self, base_dir: str = "/tmp/hexstrike_envs"):
-        self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(exist_ok=True)
+    def __init__(self, base_dir: Optional[str] = None):
+        self.base_dir = Path(base_dir or ENVS_DIR)
+        self.base_dir.mkdir(parents=True, exist_ok=True)
 
     def create_venv(self, env_name: str) -> Path:
         """Create a new virtual environment"""
@@ -59,9 +59,9 @@ env_manager = PythonEnvironmentManager()
 class FileOperationsManager:
     """Handle file operations with security and validation"""
 
-    def __init__(self, base_dir: str = "/tmp/hexstrike_files"):
-        self.base_dir = Path(base_dir)
-        self.base_dir.mkdir(exist_ok=True)
+    def __init__(self, base_dir: Optional[str] = None):
+        self.base_dir = Path(base_dir or FILES_DIR)
+        self.base_dir.mkdir(parents=True, exist_ok=True)
         self.max_file_size = 100 * 1024 * 1024  # 100MB
 
     def create_file(self, filename: str, content: str, binary: bool = False) -> Dict[str, Any]:

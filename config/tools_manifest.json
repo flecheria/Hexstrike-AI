@@ -1,0 +1,880 @@
+{
+  "version": "6.0.0",
+  "description": "HexStrike AI Configurable Tool Manifest for Container Builds and MCP Tool Discovery",
+  "default_profile": "recon_network_scan",
+  "profiles": {
+    "minimal": {
+      "description": "Lightweight core subset for fast network scanning, DNS/subdomain recon, and HTTP probing",
+      "categories": ["network", "reconnaissance", "scanning"]
+    },
+    "recon_network_scan": {
+      "description": "Curated subset of the most important tools for Network Discovery, Reconnaissance, and Vulnerability/Web Scanning (Default)",
+      "categories": ["network", "reconnaissance", "scanning"]
+    },
+    "web_security": {
+      "description": "Recon/Network/Scan subset plus extended Web Application & API Security testing tools",
+      "categories": ["network", "reconnaissance", "scanning", "web"]
+    },
+    "auth_password": {
+      "description": "Recon/Network/Scan subset plus Authentication & Password auditing tools",
+      "categories": ["network", "reconnaissance", "scanning", "auth"]
+    },
+    "binary_forensics": {
+      "description": "Recon/Network/Scan subset plus Binary Analysis, Reverse Engineering, and Forensics/CTF tools",
+      "categories": ["network", "reconnaissance", "scanning", "binary", "forensics"]
+    },
+    "cloud_security": {
+      "description": "Recon/Network/Scan subset plus Cloud & Container Security auditing tools",
+      "categories": ["network", "reconnaissance", "scanning", "cloud"]
+    },
+    "full": {
+      "description": "Complete arsenal across all security domains",
+      "categories": ["network", "reconnaissance", "scanning", "web", "auth", "binary", "forensics", "cloud"]
+    }
+  },
+  "tools": {
+    "nmap": {
+      "binary": "nmap",
+      "category": "network",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "Network exploration, port scanning, OS/service version detection, and NSE script auditing",
+      "mcp_tools": ["nmap_scan", "nmap_advanced_scan", "recon_domains", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/nmap", "/api/tools/nmap-advanced"],
+      "install": {
+        "method": "apt",
+        "package": "nmap"
+      }
+    },
+    "masscan": {
+      "binary": "masscan",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "High-speed Internet-scale TCP port scanner with banner grabbing",
+      "mcp_tools": ["masscan_high_speed"],
+      "api_endpoints": ["/api/tools/masscan"],
+      "install": {
+        "method": "apt",
+        "package": "masscan"
+      }
+    },
+    "rustscan": {
+      "binary": "rustscan",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Ultra-fast asynchronous port discovery scanner with Nmap handoff",
+      "mcp_tools": ["rustscan_fast_scan"],
+      "api_endpoints": ["/api/tools/rustscan"],
+      "install": {
+        "method": "github_release",
+        "repo": "RustScan/RustScan",
+        "asset_patterns": {
+          "amd64": ["x86_64-linux-rustscan.tar.gz.zip", "rustscan.*amd64.deb", "x86_64.*linux.*tar.gz"],
+          "arm64": ["aarch64-linux-rustscan.tar.gz.zip", "aarch64.*linux.*tar.gz"]
+        },
+        "fallback": {
+          "method": "apt",
+          "package": "rustscan"
+        }
+      }
+    },
+    "arp-scan": {
+      "binary": "arp-scan",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "Local network host discovery and MAC address fingerprinting via ARP packets",
+      "mcp_tools": ["arp_scan_discovery"],
+      "api_endpoints": ["/api/tools/arp-scan"],
+      "install": {
+        "method": "apt",
+        "package": "arp-scan"
+      }
+    },
+    "nbtscan": {
+      "binary": "nbtscan",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "NetBIOS name network scanner for Windows/Samba host identification",
+      "mcp_tools": ["nbtscan_netbios"],
+      "api_endpoints": ["/api/tools/nbtscan"],
+      "install": {
+        "method": "apt",
+        "package": "nbtscan"
+      }
+    },
+    "rpcclient": {
+      "binary": "rpcclient",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "MS-RPC client tool for enumerating Samba/Windows users, groups, and domain info",
+      "mcp_tools": ["rpcclient_enumeration"],
+      "api_endpoints": ["/api/tools/rpcclient"],
+      "install": {
+        "method": "apt",
+        "package": "samba-common-bin"
+      }
+    },
+    "smbmap": {
+      "binary": "smbmap",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "SMB share enumeration tool for auditing share permissions and contents",
+      "mcp_tools": ["smbmap_scan"],
+      "api_endpoints": ["/api/tools/smbmap"],
+      "install": {
+        "method": "pip",
+        "package": "smbmap",
+        "fallback": {
+          "method": "apt",
+          "package": "smbmap"
+        }
+      }
+    },
+    "enum4linux-ng": {
+      "binary": "enum4linux-ng",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "Next-generation SMB/RPC/LDAP enumeration tool for Windows and Samba hosts",
+      "mcp_tools": ["enum4linux_ng_advanced"],
+      "api_endpoints": ["/api/tools/enum4linux-ng"],
+      "install": {
+        "method": "git",
+        "url": "https://github.com/cddmp/enum4linux-ng.git",
+        "entrypoint": "enum4linux-ng.py",
+        "pip_deps": ["impacket", "pyyaml", "ldap3"]
+      }
+    },
+    "tcpdump": {
+      "binary": "tcpdump",
+      "category": "network",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "full"],
+      "description": "Command-line packet analyzer and network traffic capture utility",
+      "mcp_tools": ["execute_command"],
+      "api_endpoints": ["/api/command"],
+      "install": {
+        "method": "apt",
+        "package": "tcpdump"
+      }
+    },
+    "netcat": {
+      "binary": "nc",
+      "category": "network",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "TCP/UDP network connection, banner grabbing, and port diagnostic utility",
+      "mcp_tools": ["execute_command"],
+      "api_endpoints": ["/api/command"],
+      "install": {
+        "method": "apt",
+        "package": "netcat-openbsd"
+      }
+    },
+    "subfinder": {
+      "binary": "subfinder",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "Fast passive subdomain discovery tool using certificate transparency and OSINT sources",
+      "mcp_tools": ["subfinder_scan", "recon_domains", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/subfinder", "/api/investigation/recon", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "projectdiscovery/subfinder",
+        "asset_patterns": {
+          "amd64": ["subfinder_.*_linux_amd64.zip"],
+          "arm64": ["subfinder_.*_linux_arm64.zip"]
+        },
+        "fallback": {
+          "method": "apt",
+          "package": "subfinder"
+        }
+      }
+    },
+    "amass": {
+      "binary": "amass",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "In-depth attack surface mapping and external asset/subdomain discovery (OWASP Amass)",
+      "mcp_tools": ["amass_scan", "recon_domains", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/amass", "/api/investigation/recon", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "owasp-amass/amass",
+        "asset_patterns": {
+          "amd64": ["amass_Linux_amd64.zip", "amass_linux_amd64.zip"],
+          "arm64": ["amass_Linux_arm64.zip", "amass_linux_arm64.zip"]
+        },
+        "fallback": {
+          "method": "apt",
+          "package": "amass"
+        }
+      }
+    },
+    "fierce": {
+      "binary": "fierce",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "full"],
+      "description": "DNS reconnaissance tool for locating non-contiguous IP space and subdomains",
+      "mcp_tools": ["fierce_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/fierce", "/api/investigation/domains"],
+      "install": {
+        "method": "pip",
+        "package": "fierce",
+        "fallback": {
+          "method": "apt",
+          "package": "fierce"
+        }
+      }
+    },
+    "dnsenum": {
+      "binary": "dnsenum",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Multithreaded DNS enumeration script for A, NS, MX records and zone transfer checks",
+      "mcp_tools": ["dnsenum_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/dnsenum", "/api/investigation/domains"],
+      "install": {
+        "method": "apt",
+        "package": "dnsenum",
+        "fallback": {
+          "method": "git",
+          "url": "https://github.com/fwaeytens/dnsenum.git",
+          "entrypoint": "dnsenum.pl"
+        }
+      }
+    },
+    "httpx": {
+      "binary": "httpx",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "Fast multi-purpose HTTP probing toolkit for status codes, titles, TLS, and tech stack detection",
+      "mcp_tools": ["httpx_probe", "recon_domains", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/httpx", "/api/investigation/recon", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "projectdiscovery/httpx",
+        "asset_patterns": {
+          "amd64": ["httpx_.*_linux_amd64.zip"],
+          "arm64": ["httpx_.*_linux_arm64.zip"]
+        },
+        "fallback": {
+          "method": "apt",
+          "package": "httpx-toolkit"
+        }
+      }
+    },
+    "wafw00f": {
+      "binary": "wafw00f",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Web Application Firewall (WAF) fingerprinting and identification tool",
+      "mcp_tools": ["wafw00f_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/wafw00f", "/api/investigation/domains"],
+      "install": {
+        "method": "pip",
+        "package": "wafw00f",
+        "fallback": {
+          "method": "apt",
+          "package": "wafw00f"
+        }
+      }
+    },
+    "whois": {
+      "binary": "whois",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "Domain registration and ASN WHOIS lookup client",
+      "mcp_tools": ["execute_command"],
+      "api_endpoints": ["/api/command"],
+      "install": {
+        "method": "apt",
+        "package": "whois"
+      }
+    },
+    "dig": {
+      "binary": "dig",
+      "category": "reconnaissance",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "DNS lookup utility (from dnsutils/bind9-dnsutils) for querying DNS records",
+      "mcp_tools": ["execute_command"],
+      "api_endpoints": ["/api/command"],
+      "install": {
+        "method": "apt",
+        "package": "dnsutils"
+      }
+    },
+    "nuclei": {
+      "binary": "nuclei",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "Fast template-based vulnerability scanner for CVEs, misconfigurations, and exposures",
+      "mcp_tools": ["nuclei_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/nuclei", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "projectdiscovery/nuclei",
+        "asset_patterns": {
+          "amd64": ["nuclei_.*_linux_amd64.zip"],
+          "arm64": ["nuclei_.*_linux_arm64.zip"]
+        },
+        "fallback": {
+          "method": "apt",
+          "package": "nuclei"
+        }
+      }
+    },
+    "nikto": {
+      "binary": "nikto",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Web server scanner for dangerous files, outdated server software, and misconfigurations",
+      "mcp_tools": ["nikto_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/nikto", "/api/investigation/domains"],
+      "install": {
+        "method": "git",
+        "url": "https://github.com/sullo/nikto.git",
+        "entrypoint": "program/nikto.pl",
+        "apt_deps": ["perl", "libnet-ssleay-perl", "libwhisker2-perl"]
+      }
+    },
+    "gobuster": {
+      "binary": "gobuster",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "full"],
+      "description": "Directory, file, DNS subdomain, and virtual host brute-forcing scanner",
+      "mcp_tools": ["gobuster_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/gobuster", "/api/investigation/domains"],
+      "install": {
+        "method": "apt",
+        "package": "gobuster"
+      }
+    },
+    "ffuf": {
+      "binary": "ffuf",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "full"],
+      "description": "Fast web fuzzer written in Go for directory, vhost, and parameter discovery",
+      "mcp_tools": ["ffuf_scan", "api_fuzzer", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/ffuf", "/api/tools/api_fuzzer", "/api/investigation/domains"],
+      "install": {
+        "method": "apt",
+        "package": "ffuf"
+      }
+    },
+    "dirb": {
+      "binary": "dirb",
+      "category": "scanning",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Classic dictionary-based web content scanner and wordlist provider",
+      "mcp_tools": ["dirb_scan"],
+      "api_endpoints": ["/api/tools/dirb"],
+      "install": {
+        "method": "apt",
+        "package": "dirb"
+      }
+    },
+    "dirsearch": {
+      "binary": "dirsearch",
+      "category": "scanning",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Web path discovery scanner with recursive scanning and extension filtering",
+      "mcp_tools": ["dirsearch_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/dirsearch", "/api/investigation/domains"],
+      "install": {
+        "method": "pip",
+        "package": "dirsearch",
+        "fallback": {
+          "method": "apt",
+          "package": "dirsearch"
+        }
+      }
+    },
+    "sqlmap": {
+      "binary": "sqlmap",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["recon_network_scan", "web_security", "full"],
+      "description": "Automated SQL injection detection and database exploitation tool",
+      "mcp_tools": ["sqlmap_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/sqlmap", "/api/investigation/domains"],
+      "install": {
+        "method": "apt",
+        "package": "sqlmap",
+        "fallback": {
+          "method": "pip",
+          "package": "sqlmap"
+        }
+      }
+    },
+    "curl": {
+      "binary": "curl",
+      "category": "scanning",
+      "enabled": true,
+      "essential": true,
+      "profiles": ["minimal", "recon_network_scan", "web_security", "auth_password", "binary_forensics", "cloud_security", "full"],
+      "description": "HTTP client used by API Fuzzer, GraphQL Scanner, JWT Analyzer, and Schema Analyzer",
+      "mcp_tools": ["api_fuzzer", "graphql_scanner", "jwt_analyzer", "api_schema_analyzer", "comprehensive_api_audit"],
+      "api_endpoints": ["/api/tools/api_fuzzer", "/api/tools/graphql_scanner", "/api/tools/jwt_analyzer", "/api/tools/api_schema_analyzer"],
+      "install": {
+        "method": "apt",
+        "package": "curl"
+      }
+    },
+    "katana": {
+      "binary": "katana",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Next-generation crawling and spidering framework by ProjectDiscovery",
+      "mcp_tools": ["katana_crawl", "recon_domains", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/katana", "/api/investigation/recon", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "projectdiscovery/katana",
+        "asset_patterns": {
+          "amd64": ["katana_.*_linux_amd64.zip"],
+          "arm64": ["katana_.*_linux_arm64.zip"]
+        }
+      }
+    },
+    "feroxbuster": {
+      "binary": "feroxbuster",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Fast, recursive content discovery tool written in Rust",
+      "mcp_tools": ["feroxbuster_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/feroxbuster", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "epi052/feroxbuster",
+        "asset_patterns": {
+          "amd64": ["x86_64-linux-feroxbuster.zip", "feroxbuster_.*_amd64.deb.zip"],
+          "arm64": ["aarch64-linux-feroxbuster.zip"]
+        }
+      }
+    },
+    "arjun": {
+      "binary": "arjun",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "HTTP parameter discovery suite for finding hidden GET/POST/JSON parameters",
+      "mcp_tools": ["arjun_parameter_discovery", "arjun_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/arjun", "/api/investigation/domains"],
+      "install": {
+        "method": "pip",
+        "package": "arjun"
+      }
+    },
+    "dalfox": {
+      "binary": "dalfox",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Fast parameter analysis and XSS scanner with DOM mining",
+      "mcp_tools": ["dalfox_xss_scan", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/dalfox", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "hahwul/dalfox",
+        "asset_patterns": {
+          "amd64": ["dalfox_.*_linux_amd64.tar.gz"],
+          "arm64": ["dalfox_.*_linux_arm64.tar.gz"]
+        }
+      }
+    },
+    "gau": {
+      "binary": "gau",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Fetches known URLs from AlienVault OTX, Wayback Machine, Common Crawl, and URLScan",
+      "mcp_tools": ["gau_discovery", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/gau", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "lc/gau",
+        "asset_patterns": {
+          "amd64": ["gau_.*_linux_amd64.tar.gz"],
+          "arm64": ["gau_.*_linux_arm64.tar.gz"]
+        }
+      }
+    },
+    "waybackurls": {
+      "binary": "waybackurls",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Fetches historical URLs archived in the Wayback Machine",
+      "mcp_tools": ["waybackurls_discovery", "investigate_domains", "batch_domain_tool"],
+      "api_endpoints": ["/api/tools/waybackurls", "/api/investigation/domains"],
+      "install": {
+        "method": "github_release",
+        "repo": "tomnomnom/waybackurls",
+        "asset_patterns": {
+          "amd64": ["waybackurls-linux-amd64-.*.tgz"],
+          "arm64": ["waybackurls-linux-amd64-.*.tgz"]
+        }
+      }
+    },
+    "uro": {
+      "binary": "uro",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Declutters URL lists for crawling and pentesting by deduplicating patterns",
+      "mcp_tools": ["uro_url_filtering"],
+      "api_endpoints": ["/api/tools/uro"],
+      "install": {
+        "method": "pip",
+        "package": "uro"
+      }
+    },
+    "wfuzz": {
+      "binary": "wfuzz",
+      "category": "web",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["web_security", "full"],
+      "description": "Web application fuzzer that replaces the FUZZ keyword in URLs, headers, or POST data",
+      "mcp_tools": ["wfuzz_scan"],
+      "api_endpoints": ["/api/tools/wfuzz"],
+      "install": {
+        "method": "apt",
+        "package": "wfuzz",
+        "fallback": {
+          "method": "pip",
+          "package": "wfuzz"
+        }
+      }
+    },
+    "hydra": {
+      "binary": "hydra",
+      "category": "auth",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["auth_password", "full"],
+      "description": "Parallelized network login cracker supporting SSH, FTP, HTTP, SMB, RDP, and 50+ protocols",
+      "mcp_tools": ["hydra_attack"],
+      "api_endpoints": ["/api/tools/hydra"],
+      "install": {
+        "method": "apt",
+        "package": "hydra"
+      }
+    },
+    "john": {
+      "binary": "john",
+      "category": "auth",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["auth_password", "full"],
+      "description": "John the Ripper offline password hash cracker",
+      "mcp_tools": ["john_crack"],
+      "api_endpoints": ["/api/tools/john"],
+      "install": {
+        "method": "apt",
+        "package": "john"
+      }
+    },
+    "hashcat": {
+      "binary": "hashcat",
+      "category": "auth",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["auth_password", "full"],
+      "description": "High-speed password hash recovery utility supporting dictionary and mask attacks",
+      "mcp_tools": ["hashcat_crack"],
+      "api_endpoints": ["/api/tools/hashcat"],
+      "install": {
+        "method": "apt",
+        "package": "hashcat"
+      }
+    },
+    "gdb": {
+      "binary": "gdb",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "GNU Debugger for batch and interactive binary analysis",
+      "mcp_tools": ["gdb_analyze", "gdb_peda_debug"],
+      "api_endpoints": ["/api/tools/gdb", "/api/tools/gdb-peda"],
+      "install": {
+        "method": "apt",
+        "package": "gdb"
+      }
+    },
+    "radare2": {
+      "binary": "r2",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Radare2 reverse engineering and disassembly framework",
+      "mcp_tools": ["radare2_analyze"],
+      "api_endpoints": ["/api/tools/radare2"],
+      "install": {
+        "method": "apt",
+        "package": "radare2"
+      }
+    },
+    "binwalk": {
+      "binary": "binwalk",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Firmware analysis and embedded file signature scanning/extraction tool",
+      "mcp_tools": ["binwalk_analyze"],
+      "api_endpoints": ["/api/tools/binwalk"],
+      "install": {
+        "method": "apt",
+        "package": "binwalk"
+      }
+    },
+    "ropgadget": {
+      "binary": "ROPgadget",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Searches binaries for Return-Oriented Programming (ROP) gadgets",
+      "mcp_tools": ["ropgadget_search"],
+      "api_endpoints": ["/api/tools/ropgadget"],
+      "install": {
+        "method": "pip",
+        "package": "ROPGadget"
+      }
+    },
+    "checksec": {
+      "binary": "checksec",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Inspects binary hardening properties (RELRO, Stack Canary, NX, PIE, Fortify)",
+      "mcp_tools": ["checksec_analyze"],
+      "api_endpoints": ["/api/tools/checksec"],
+      "install": {
+        "method": "apt",
+        "package": "checksec",
+        "fallback": {
+          "method": "pip",
+          "package": "checksec.py"
+        }
+      }
+    },
+    "strings": {
+      "binary": "strings",
+      "category": "binary",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["minimal", "recon_network_scan", "binary_forensics", "full"],
+      "description": "Extracts printable character sequences from binary files (binutils)",
+      "mcp_tools": ["strings_extract"],
+      "api_endpoints": ["/api/tools/strings"],
+      "install": {
+        "method": "apt",
+        "package": "binutils"
+      }
+    },
+    "objdump": {
+      "binary": "objdump",
+      "category": "binary",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["minimal", "recon_network_scan", "binary_forensics", "full"],
+      "description": "Disassembles executable sections and dumps ELF/PE headers (binutils)",
+      "mcp_tools": ["objdump_analyze"],
+      "api_endpoints": ["/api/tools/objdump"],
+      "install": {
+        "method": "apt",
+        "package": "binutils"
+      }
+    },
+    "xxd": {
+      "binary": "xxd",
+      "category": "binary",
+      "enabled": true,
+      "essential": false,
+      "profiles": ["minimal", "recon_network_scan", "binary_forensics", "full"],
+      "description": "Generates hexadecimal and ASCII dumps of files",
+      "mcp_tools": ["xxd_hexdump"],
+      "api_endpoints": ["/api/tools/xxd"],
+      "install": {
+        "method": "apt",
+        "package": "xxd"
+      }
+    },
+    "pwntools": {
+      "binary": "pwn",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "CTF framework and exploit development library for Python",
+      "mcp_tools": ["pwntools_exploit"],
+      "api_endpoints": ["/api/tools/pwntools"],
+      "install": {
+        "method": "pip",
+        "package": "pwntools>=4.10.0,<5.0.0"
+      }
+    },
+    "angr": {
+      "binary": "python3 -c 'import angr'",
+      "category": "binary",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["full"],
+      "description": "Symbolic execution and binary analysis framework for Python",
+      "mcp_tools": ["angr_symbolic_execution"],
+      "api_endpoints": ["/api/tools/angr"],
+      "install": {
+        "method": "pip",
+        "package": "angr>=9.2.0,<10.0.0"
+      }
+    },
+    "foremost": {
+      "binary": "foremost",
+      "category": "forensics",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Carves embedded files and data structures from disk images or raw streams",
+      "mcp_tools": ["foremost_carving"],
+      "api_endpoints": ["/api/tools/foremost"],
+      "install": {
+        "method": "apt",
+        "package": "foremost"
+      }
+    },
+    "steghide": {
+      "binary": "steghide",
+      "category": "forensics",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Extracts, embeds, or inspects steganographic payloads in image and audio files",
+      "mcp_tools": ["steghide_analysis"],
+      "api_endpoints": ["/api/tools/steghide"],
+      "install": {
+        "method": "apt",
+        "package": "steghide"
+      }
+    },
+    "exiftool": {
+      "binary": "exiftool",
+      "category": "forensics",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["binary_forensics", "full"],
+      "description": "Reads and extracts EXIF/XMP/IPTC metadata from images, documents, and media files",
+      "mcp_tools": ["exiftool_extract"],
+      "api_endpoints": ["/api/tools/exiftool"],
+      "install": {
+        "method": "apt",
+        "package": "libimage-exiftool-perl"
+      }
+    },
+    "trivy": {
+      "binary": "trivy",
+      "category": "cloud",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["cloud_security", "full"],
+      "description": "Vulnerability and misconfiguration scanner for container images, filesystems, and IaC",
+      "mcp_tools": ["trivy_scan"],
+      "api_endpoints": ["/api/tools/trivy"],
+      "install": {
+        "method": "github_release",
+        "repo": "aquasecurity/trivy",
+        "asset_patterns": {
+          "amd64": ["trivy_.*_Linux-64bit.tar.gz"],
+          "arm64": ["trivy_.*_Linux-ARM64.tar.gz"]
+        }
+      }
+    },
+    "checkov": {
+      "binary": "checkov",
+      "category": "cloud",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["cloud_security", "full"],
+      "description": "Static code analysis tool for Infrastructure-as-Code (Terraform, Kubernetes, CloudFormation)",
+      "mcp_tools": ["checkov_iac_scan"],
+      "api_endpoints": ["/api/tools/checkov"],
+      "install": {
+        "method": "pip",
+        "package": "checkov"
+      }
+    },
+    "prowler": {
+      "binary": "prowler",
+      "category": "cloud",
+      "enabled": false,
+      "essential": false,
+      "profiles": ["cloud_security", "full"],
+      "description": "Cloud security best-practice and compliance assessments across AWS, Azure, and GCP",
+      "mcp_tools": ["prowler_scan"],
+      "api_endpoints": ["/api/tools/prowler"],
+      "install": {
+        "method": "pip",
+        "package": "prowler"
+      }
+    }
+  }
+}

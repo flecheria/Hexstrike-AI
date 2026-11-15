@@ -109,12 +109,16 @@ def health_check():
 
     for tool in all_tools:
         try:
-            result = execute_command(f"which {tool}", use_cache=True)
-            tools_status[tool] = result["success"]
-        except:
+            tools_status[tool] = tool_registry.is_tool_installed(tool)
+        except Exception:
             tools_status[tool] = False
 
-    all_essential_tools_available = all(tools_status[tool] for tool in essential_tools)
+    registry_report = tool_registry.get_registry_report()
+    manifest_summary = registry_report.get("summary", {})
+    all_essential_tools_available = manifest_summary.get(
+        "all_essential_installed",
+        all(tools_status.get(tool, False) for tool in essential_tools),
+    )
 
     category_stats = {
         "essential": {"total": len(essential_tools), "available": sum(1 for tool in essential_tools if tools_status.get(tool, False))},
@@ -136,6 +140,9 @@ def health_check():
         "status": "healthy",
         "message": "HexStrike AI Tools API Server is operational",
         "version": "6.0.0",
+        "active_profile": registry_report.get("active_profile", "recon_network_scan"),
+        "manifest_summary": manifest_summary,
+        "storage_volumes": registry_report.get("storage_volumes", {}),
         "tools_status": tools_status,
         "all_essential_tools_available": all_essential_tools_available,
         "total_tools_available": sum(1 for tool, available in tools_status.items() if available),
@@ -145,6 +152,54 @@ def health_check():
         "telemetry": telemetry.get_stats(),
         "uptime": time.time() - telemetry.stats["start_time"]
     }
+
+
+@router.get("/api/tools/available")
+def list_available_tools(
+    category: str = Query(default="", description="Filter by category (network, reconnaissance, scanning, web, auth, binary, forensics, cloud)"),
+    installed_only: bool = Query(default=False, description="Return only installed tools"),
+    enabled_only: bool = Query(default=False, description="Return only tools enabled in config/tools_manifest.json"),
+    profile: str = Query(default="", description="Filter by container build profile"),
+    refresh: bool = Query(default=False, description="Force rescan of system binaries"),
+):
+    """Get the list of configured and installed tools from the manifest along with MCP tool mappings."""
+    try:
+        return tool_registry.get_registry_report(
+            category=category or None,
+            installed_only=installed_only,
+            enabled_only=enabled_only,
+            profile=profile or None,
+            refresh=refresh,
+        )
+    except Exception as e:
+        logger.error(f"💥 Error listing available tools: {str(e)}")
+        return JSONResponse(content={"error": f"Server error: {str(e)}"}, status_code=500)
+
+
+@router.get("/api/tools/profiles")
+def list_tool_profiles(refresh: bool = Query(default=False)):
+    """List container build profiles (minimal, recon_network_scan, web_security, full, etc.) and their tools."""
+    try:
+        return tool_registry.get_profiles(refresh=refresh)
+    except Exception as e:
+        logger.error(f"💥 Error listing tool profiles: {str(e)}")
+        return JSONResponse(content={"error": f"Server error: {str(e)}"}, status_code=500)
+
+
+@router.get("/api/tools/check/{tool_name}")
+@router.get("/api/tools/check")
+def check_tool_availability_endpoint(
+    tool_name: str = "",
+    refresh: bool = Query(default=False),
+):
+    """Check whether a specific CLI tool or MCP tool is installed and return available alternatives."""
+    try:
+        if not tool_name:
+            return JSONResponse(content={"error": "tool_name is required"}, status_code=400)
+        return tool_registry.check_tool(tool_name, refresh=refresh)
+    except Exception as e:
+        logger.error(f"💥 Error checking tool availability: {str(e)}")
+        return JSONResponse(content={"error": f"Server error: {str(e)}"}, status_code=500)
 
 
 @router.post("/api/command")

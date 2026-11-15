@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from src.config import logger
 from src.core.domain_utils import normalize_targets, extract_domain, ensure_url
+from src.core.tool_registry import tool_registry
 from src.core.executor import (
     execute_command,
     execute_nmap_scan,
@@ -86,7 +87,15 @@ class DomainInvestigationManager:
         logger.info(f"🔍 Investigating domain: {clean_domain} (objective={objective}, execute_tools={execute_tools})")
 
         profile = decision_engine.analyze_target(clean_domain)
-        selected_tools = tools if tools else decision_engine.select_optimal_tools(profile, objective)[:max_tools]
+        if tools:
+            selected_tools = tools
+        else:
+            candidates = decision_engine.select_optimal_tools(profile, objective)
+            if execute_tools:
+                installed_candidates = [t for t in candidates if tool_registry.is_tool_installed(t)]
+                selected_tools = (installed_candidates or candidates)[:max_tools]
+            else:
+                selected_tools = candidates[:max_tools]
         attack_chain = decision_engine.create_attack_chain(profile, objective)
 
         optimized_parameters: Dict[str, Dict[str, Any]] = {}

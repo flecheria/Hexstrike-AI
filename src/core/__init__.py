@@ -63,3 +63,8 @@ from src.core.domain_utils import (
     wrap_endpoint_for_multi_target,
     MultiTargetAPIRouter,
 )
+from src.core.tool_registry import (
+    BUILTIN_MCP_TOOLS,
+    ToolRegistry,
+    tool_registry,
+)
