@@ -1,0 +1,82 @@
+# =============================================================================
+# HexStrike AI v6.0 - Docker Compose & Podman Compose Configuration
+# =============================================================================
+# Usage with Docker:
+#   docker compose up -d --build
+#
+# Usage with Podman:
+#   podman compose up -d --build
+#   # or: podman-compose up -d --build
+#
+# Customize build profiles, environment variables, volumes, and network settings
+# via a .env file (cp .env.example .env) or inline environment variables:
+#   TOOL_PROFILE=web_security EXTRA_TOOLS=hydra,trivy docker compose up -d --build
+# =============================================================================
+
+services:
+  hexstrike-ai:
+#    build:
+#      context: .
+#      dockerfile: ${CONTAINERFILE:-Dockerfile}
+#      args:
+#        BASE_IMAGE: ${BASE_IMAGE:-docker.io/library/python:3.11-slim-bookworm}
+#        TOOL_PROFILE: ${TOOL_PROFILE:-recon_network_scan}
+#        EXTRA_TOOLS: ${EXTRA_TOOLS:-}
+#        EXCLUDE_TOOLS: ${EXCLUDE_TOOLS:-}
+    image: ${HEXSTRIKE_IMAGE:-hexstrike-ai:latest}
+    container_name: ${HEXSTRIKE_CONTAINER_NAME:-hexstrike-ai}
+    hostname: hexstrike-ai
+    restart: ${HEXSTRIKE_RESTART_POLICY:-unless-stopped}
+
+    # Publish the FastAPI server port to the host (defaults to 127.0.0.1:8888 -> 8888)
+    ports:
+      - host_ip: ${HEXSTRIKE_BIND_IP:-127.0.0.1}
+        published: ${HEXSTRIKE_HOST_PORT:-8888}
+        target: ${HEXSTRIKE_PORT:-8888}
+        protocol: tcp
+
+    # Capabilities required for raw socket network scanning (nmap SYN/OS scan, masscan, arp-scan, tcpdump)
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+    # Runtime environment variables
+    environment:
+      HEXSTRIKE_HOST: ${HEXSTRIKE_HOST:-0.0.0.0}
+      HEXSTRIKE_PORT: ${HEXSTRIKE_PORT:-8888}
+      HEXSTRIKE_DEBUG: ${HEXSTRIKE_DEBUG:-false}
+      HEXSTRIKE_TOOL_PROFILE: ${TOOL_PROFILE:-recon_network_scan}
+      RUNTIME_EXTRA_TOOLS: ${RUNTIME_EXTRA_TOOLS:-}
+      HEXSTRIKE_DATA_DIR: ${HEXSTRIKE_DATA_DIR:-/data}
+      HEXSTRIKE_RESULTS_DIR: ${HEXSTRIKE_RESULTS_DIR:-/data/results}
+      HEXSTRIKE_FILES_DIR: ${HEXSTRIKE_FILES_DIR:-/data/files}
+      HEXSTRIKE_ENVS_DIR: ${HEXSTRIKE_ENVS_DIR:-/data/envs}
+      HEXSTRIKE_LOG_FILE: ${HEXSTRIKE_LOG_FILE:-/data/logs/hexstrike.log}
+      HEXSTRIKE_TOOLS_MANIFEST: /app/config/tools_manifest.json
+      HEXSTRIKE_INSTALLED_TOOLS_STATE: /app/config/installed_tools.json
+
+    # Persistent storage volume for scan results, workspace files, logs, wordlists, and virtualenvs
+    volumes:
+      - type: bind
+        source: ${HEXSTRIKE_HOST_DATA_DIR:-./hexstrike-data}
+        target: ${HEXSTRIKE_DATA_DIR:-/data}
+#      - ${HEXSTRIKE_HOST_DATA_DIR:-./hexstrike-data}:${HEXSTRIKE_DATA_DIR:-/data}${HEXSTRIKE_VOLUME_OPTS:-}
+
+    # Attach to the dedicated HexStrike security network
+    networks:
+      - hexstrike-net
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:$${HEXSTRIKE_PORT:-8888}/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+networks:
+  hexstrike-net:
+    name: ${HEXSTRIKE_NETWORK_NAME:-hexstrike-net}
+    driver: ${HEXSTRIKE_NETWORK_DRIVER:-bridge}
+    ipam:
+      config:
+        - subnet: ${HEXSTRIKE_NETWORK_SUBNET:-172.28.0.0/24}

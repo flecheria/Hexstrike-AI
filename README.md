@@ -16,7 +16,7 @@
 
 **Advanced AI-powered penetration testing MCP framework with 150+ security tools and 12+ autonomous AI agents**
 
-[📋 What's New](#whats-new-in-v60) • [🏗️ Architecture](#architecture-overview) • [🚀 Installation](#installation) • [🛠️ Features](#features) • [🤖 AI Agents](#ai-agents) • [📡 API Reference](#api-reference)
+[📋 What's New](#whats-new-in-v60) • [🏗️ Architecture](#architecture-overview) • [🚀 Installation](#installation) • [🐳 Container Usage](#container-usage-docker--podman) • [🛠️ Features](#features) • [🤖 AI Agents](#ai-agents) • [📡 API Reference](#api-reference)
 
 </div>
 
@@ -137,11 +137,13 @@ Watch the full installation and setup walkthrough here: [YouTube - HexStrike AI 
 
 You can install and run HexStrike AI MCPs with various AI clients, including:
 
-- **5ire (Latest version v0.14.0 not supported for now)**
+- **Google Antigravity**
+- **Claude Code**
+- **Claude Desktop**
+- **Cursor**
 - **VS Code Copilot**
 - **Roo Code**
-- **Cursor**
-- **Claude Desktop**
+- **5ire (Latest version v0.14.0 not supported for now)**
 - **Any MCP-compatible agent**
 
 Refer to the video above for step-by-step instructions and integration examples for these platforms.
@@ -208,6 +210,379 @@ curl http://localhost:8888/health
 curl -X POST http://localhost:8888/api/intelligence/analyze-target \
   -H "Content-Type: application/json" \
   -d '{"target": "example.com", "analysis_type": "comprehensive"}'
+```
+
+---
+
+## Container Usage (Docker & Podman)
+
+HexStrike AI includes a [`Dockerfile`](Dockerfile) (for Docker), a [`Containerfile`](Containerfile) (for Podman), a [`docker-compose.yml`](compose.yml) file (with [`.env.example`](.env.example)), and a profile-driven tool installer ([`docker/install_tools.py`](docker/install_tools.py) and [`config/tools_manifest.json`](config/tools_manifest.json)). This lets you build and run lightweight, domain-specific security containers or a full pentesting arsenal in an isolated network without manually installing tools on your host.
+
+### 1. Building the Container Image
+
+You can customize which security tools are baked into the image using three build arguments:
+- `TOOL_PROFILE`: Selects a predefined tool bundle from `config/tools_manifest.json` (default: `recon_network_scan`).
+- `EXTRA_TOOLS`: Comma-separated list of additional tools to install on top of the selected profile (e.g., `"hydra,john,trivy"`).
+- `EXCLUDE_TOOLS`: Comma-separated list of tools to exclude from the selected profile (e.g., `"amass"`).
+
+#### Available Build Profiles (`TOOL_PROFILE`)
+
+| Profile | Categories Included | Key Tools Installed |
+|---------|---------------------|---------------------|
+| `recon_network_scan` *(Default)* | Network, Reconnaissance, Scanning | `nmap`, `masscan`, `rustscan`, `subfinder`, `amass`, `fierce`, `dnsenum`, `httpx`, `wafw00f`, `nuclei`, `nikto`, `gobuster`, `ffuf`, `dirb`, `dirsearch`, `sqlmap`, `smbmap`, `enum4linux-ng`, `arp-scan`, `nbtscan`, `rpcclient`, `tcpdump`, `netcat`, `whois`, `dig`, `curl`, `strings`, `objdump`, `xxd` |
+| `minimal` | Core Network, Recon & Scanning | `nmap`, `subfinder`, `fierce`, `httpx`, `nuclei`, `gobuster`, `ffuf`, `netcat`, `whois`, `dig`, `curl`, `strings`, `objdump`, `xxd` |
+| `web_security` | `recon_network_scan` + Web & API | Default tools + `katana`, `feroxbuster`, `arjun`, `dalfox`, `gau`, `waybackurls`, `uro`, `wfuzz` |
+| `auth_password` | `recon_network_scan` + Auth & Passwords | Default tools + `hydra`, `john`, `hashcat` |
+| `binary_forensics` | `recon_network_scan` + Binary & Forensics | Default tools + `gdb`, `radare2`, `binwalk`, `ropgadget`, `checksec`, `pwntools`, `foremost`, `steghide`, `exiftool` |
+| `cloud_security` | `recon_network_scan` + Cloud & Containers | Default tools + `trivy`, `checkov`, `kube-hunter`, `prowler`, `scout-suite` |
+| `full` | All 8 Security Domains | Complete arsenal across Network, Recon, Scanning, Web, Auth, Binary, Forensics, and Cloud |
+| `manifest` | Custom (`config/tools_manifest.json`) | Installs only tools marked `"enabled": true` in `config/tools_manifest.json` |
+
+#### Build with Docker (`Dockerfile`)
+
+```bash
+# 1. Build with default profile (recon_network_scan)
+docker build -t hexstrike-ai:latest .
+
+# 2. Build with a specific profile (e.g., minimal, web_security, full)
+docker build --build-arg TOOL_PROFILE=minimal -t hexstrike-ai:minimal .
+docker build --build-arg TOOL_PROFILE=web_security -t hexstrike-ai:web .
+docker build --build-arg TOOL_PROFILE=full -t hexstrike-ai:full .
+
+# 3. Build with extra or excluded tools
+docker build \
+  --build-arg TOOL_PROFILE=recon_network_scan \
+  --build-arg EXTRA_TOOLS="hydra,john,trivy" \
+  --build-arg EXCLUDE_TOOLS="amass" \
+  -t hexstrike-ai:custom .
+```
+
+#### Build with Podman (`Containerfile`)
+
+```bash
+# 1. Build with default profile (recon_network_scan)
+podman build -t hexstrike-ai:latest -f Containerfile .
+
+# 2. Build with a specific profile (e.g., minimal, web_security, full)
+podman build --build-arg TOOL_PROFILE=minimal -t hexstrike-ai:minimal -f Containerfile .
+podman build --build-arg TOOL_PROFILE=full -t hexstrike-ai:full -f Containerfile .
+
+# 3. Build with extra or excluded tools
+podman build \
+  --build-arg TOOL_PROFILE=recon_network_scan \
+  --build-arg EXTRA_TOOLS="hydra,john,trivy" \
+  --build-arg EXCLUDE_TOOLS="amass" \
+  -t hexstrike-ai:custom -f Containerfile .
+```
+
+---
+
+### 2. Running the Container
+
+The container exposes the HexStrike AI FastAPI server on port `8888` and persists all scan results, generated files, logs, wordlists, and Python virtual environments under `/data`.
+
+#### Run with Docker
+
+```bash
+# Create a local directory on the host to persist scan results and logs
+mkdir -p ./hexstrike-data
+
+# Start the container in the background
+docker run -d \
+  --name hexstrike-ai \
+  -p 8888:8888 \
+  --cap-add=NET_RAW \
+  --cap-add=NET_ADMIN \
+  -v "$(pwd)/hexstrike-data:/data" \
+  hexstrike-ai:latest
+```
+
+#### Run with Podman
+
+```bash
+mkdir -p ./hexstrike-data
+
+# Note: Use :Z on the volume mount if SELinux is enabled on your host
+podman run -d \
+  --name hexstrike-ai \
+  -p 8888:8888 \
+  --cap-add=NET_RAW \
+  --cap-add=NET_ADMIN \
+  -v "$(pwd)/hexstrike-data:/data:Z" \
+  hexstrike-ai:latest
+```
+
+> **Tip — Runtime Options & Environment Variables:**
+> - **Raw Socket / Local Network Scanning**: `--cap-add=NET_RAW --cap-add=NET_ADMIN` enables raw packet scans (such as `nmap -sS`/`-O`, `masscan`, `arp-scan`, and `tcpdump`). If you are scanning hosts on your local LAN segment, you can also run with `--network host`.
+> - **Install Extra Tools at Startup**: Pass `-e RUNTIME_EXTRA_TOOLS="dalfox,arjun"` to install additional tools from `config/tools_manifest.json` when the container boots without rebuilding the image.
+> - **Debug Logging**: Pass `-e HEXSTRIKE_DEBUG=true` to enable verbose debug logging in the server.
+> - **Custom Port**: Pass `-e HEXSTRIKE_PORT=9000 -p 9000:9000` to bind a custom API port.
+
+---
+
+### 3. Running with Docker Compose & Podman Compose
+
+For a declarative setup with a **dedicated bridge network** (`hexstrike-net`), persistent volume mapping, and centralized environment variable management, use the included [`docker-compose.yml`](compose.yml) and [`.env.example`](.env.example).
+
+#### A. Configure Environment Variables, Volumes & Network (`.env`)
+
+Copy [`.env.example`](.env.example) to `.env` to customize your build profile, host volume path, ports, and dedicated network subnet:
+
+```bash
+cp .env.example .env
+```
+
+Key settings you can manage in `.env` (all have sensible defaults if `.env` is omitted):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CONTAINERFILE` | `Dockerfile` | Container build file (`Dockerfile` for Docker, `Containerfile` for Podman) |
+| `TOOL_PROFILE` | `recon_network_scan` | Build profile (`minimal`, `recon_network_scan`, `web_security`, `auth_password`, `binary_forensics`, `cloud_security`, `full`, `manifest`) |
+| `EXTRA_TOOLS` | *(empty)* | Comma-separated extra tools to bake into the image at build time (e.g. `hydra,john,trivy`) |
+| `EXCLUDE_TOOLS` | *(empty)* | Comma-separated tools to skip at build time |
+| `RUNTIME_EXTRA_TOOLS` | *(empty)* | Comma-separated tools to install dynamically when the container starts |
+| `HEXSTRIKE_BIND_IP` | `127.0.0.1` | Host IP interface to bind the published port (`127.0.0.1` for local-only, `0.0.0.0` for external access) |
+| `HEXSTRIKE_HOST_PORT` | `8888` | Host port mapped to the container's FastAPI server |
+| `HEXSTRIKE_DEBUG` | `false` | Set to `true` to enable `--debug` mode on the server |
+| `HEXSTRIKE_HOST_DATA_DIR` | `./hexstrike-data` | Host directory mounted to `/data` inside the container for results, files, logs, and wordlists |
+| `HEXSTRIKE_VOLUME_OPTS` | *(empty)* | Optional volume mount suffix (set to `:Z` on SELinux hosts when using Podman) |
+| `HEXSTRIKE_NETWORK_NAME` | `hexstrike-net` | Dedicated isolated bridge network created for HexStrike AI (and any target lab containers you attach to it) |
+| `HEXSTRIKE_NETWORK_SUBNET` | `172.28.0.0/24` | CIDR subnet for the dedicated `hexstrike-net` network |
+
+#### B. Run Compose with Docker
+
+```bash
+# 1. Build (if not already built) and start in the background
+docker compose up -d --build
+
+# 2. Or override profile / tools inline without editing .env
+TOOL_PROFILE=web_security EXTRA_TOOLS="hydra,trivy" docker compose up -d --build
+
+# 3. Check container status, health, and dedicated network
+docker compose ps
+docker network inspect hexstrike-net
+
+# 4. Follow real-time logs
+docker compose logs -f
+
+# 5. Stop and remove container & network (persistent data in ./hexstrike-data is preserved)
+docker compose down
+```
+
+#### C. Run Compose with Podman
+
+You can use either `podman compose` (Podman v4.7+ wrapper) or `podman-compose`:
+
+```bash
+# 1. Build using Containerfile and start in the background
+#    (On SELinux systems, set HEXSTRIKE_VOLUME_OPTS=:Z in .env or inline)
+CONTAINERFILE=Containerfile HEXSTRIKE_VOLUME_OPTS=:Z podman compose up -d --build
+# Or with podman-compose:
+CONTAINERFILE=Containerfile HEXSTRIKE_VOLUME_OPTS=:Z podman-compose up -d --build
+
+# 2. Build with a specific tool profile
+CONTAINERFILE=Containerfile TOOL_PROFILE=full podman compose up -d --build
+# OR
+podman compose -f compose.pod.yml -p hexstrike-ai up -d
+
+# 3. Check status and follow logs
+podman compose ps
+podman compose logs -f
+
+# 4. Stop and remove container & dedicated network
+podman compose down
+```
+
+> **Tip — Attaching Target Lab Containers to `hexstrike-net`:**
+> Because `docker-compose.yml` creates a dedicated `hexstrike-net` network (`172.28.0.0/24` by default), you can spin up vulnerable practice targets (such as OWASP Juice Shop or DVWA) on the same isolated network so HexStrike AI can scan them by container hostname or internal IP:
+> ```bash
+> # Docker
+> docker run -d --name juice-shop --network hexstrike-net bkimminich/juice-shop
+>
+> # Podman
+> podman run -d --name juice-shop --network hexstrike-net docker.io/bkimminich/juice-shop
+> ```
+> Then ask your AI agent to scan `http://juice-shop:3000` using HexStrike AI!
+
+---
+
+### 4. Reading Scan Results, Files, and Logs
+
+When you mount a host directory to `/data` (e.g., `-v "$(pwd)/hexstrike-data:/data"`), the container automatically initializes and populates the following directory layout:
+
+| Container Path | Host Path (`./hexstrike-data`) | Environment Variable | Purpose |
+|----------------|--------------------------------|----------------------|---------|
+| `/data/results` | `./hexstrike-data/results` | `HEXSTRIKE_RESULTS_DIR` | Saved tool outputs and exported investigation reports |
+| `/data/files` | `./hexstrike-data/files` | `HEXSTRIKE_FILES_DIR` | Workspace files, payloads, and scripts created via `/api/files/*` or MCP file tools |
+| `/data/logs/hexstrike.log` | `./hexstrike-data/logs/hexstrike.log` | `HEXSTRIKE_LOG_FILE` | Full server and command execution log file |
+| `/data/wordlists` | `./hexstrike-data/wordlists` | — | Wordlists directory (pre-seeded with `common.txt`; drop custom wordlists here) |
+| `/data/envs` | `./hexstrike-data/envs` | `HEXSTRIKE_ENVS_DIR` | Persistent Python virtual environments managed by `/api/python/*` |
+
+You can read and inspect scan results in four ways:
+
+#### A. Directly from the Host Filesystem
+Because `/data` is bind-mounted to `./hexstrike-data`, you can inspect outputs directly on your host machine:
+```bash
+# List generated files and payloads
+ls -la ./hexstrike-data/files/
+ls -la ./hexstrike-data/results/
+
+# Tail the persistent server & tool execution log
+tail -f ./hexstrike-data/logs/hexstrike.log
+```
+
+#### B. Via Container Live Logs
+Watch real-time `ModernVisualEngine` progress bars, live `STDOUT`/`STDERR` streams, and execution summaries:
+```bash
+# Docker
+docker logs -f hexstrike-ai
+
+# Podman
+podman logs -f hexstrike-ai
+```
+
+#### C. Via REST API & Interactive Swagger UI
+- **Swagger UI**: Open `http://localhost:8888/docs` in your browser to explore and test all endpoints interactively.
+- **Health & Installed Tools Check**:
+  ```bash
+  # Check server status, active container profile, and storage volume paths
+  curl -s http://localhost:8888/health | python3 -m json.tool
+
+  # List only tools currently installed in the running container
+  curl -s "http://localhost:8888/api/tools/available?installed_only=true" | python3 -m json.tool
+  ```
+- **List Workspace Files & Active Processes**:
+  ```bash
+  # List files stored in /data/files
+  curl -s "http://localhost:8888/api/files/list" | python3 -m json.tool
+
+  # Check running background scans and live process dashboard
+  curl -s http://localhost:8888/api/processes/list | python3 -m json.tool
+  curl -s http://localhost:8888/api/processes/dashboard | python3 -m json.tool
+  ```
+
+#### D. Via MCP Tools Inside Your AI Agent
+Ask your connected AI agent (Claude Code, Google Antigravity, etc.) to retrieve results directly using built-in MCP tools:
+- `get_available_tools()` / `check_tool_availability(tool_name="nmap")` — Inspect installed tools in the container.
+- `list_files(directory=".")` — List files and scan artifacts saved in `/data/files`.
+- `investigate_domains(domains="example.com", execute_tools=True)` — Run an end-to-end investigation and return structured JSON findings directly to the chat.
+- `list_active_processes()` / `get_process_status(pid=...)` — Monitor long-running scans inside the container.
+
+---
+
+### 5. Connecting the Container to Claude Code and Google Antigravity
+
+HexStrike AI uses [`hexstrike_mcp.py`](hexstrike_mcp.py) as an MCP stdio bridge that communicates with the container's FastAPI server (`http://127.0.0.1:8888`).
+
+When running HexStrike AI in a container, you can connect your AI client using either:
+1. **Container-Exec Mode (Recommended — Zero Host Dependencies)**: The AI client runs `docker exec -i hexstrike-ai python3 /app/hexstrike_mcp.py` (or `podman exec -i ...`) directly inside the running container. No Python packages need to be installed on your host machine.
+2. **Host Python Mode**: The AI client runs `python3 /path/to/hexstrike_mcp.py --server http://127.0.0.1:8888` from a Python virtual environment on your host machine while the container exposes port `8888`.
+
+---
+
+#### Connecting to Google Antigravity
+
+Google Antigravity loads MCP server definitions from `~/.gemini/config/mcp_config.json` (global configuration across all workspaces) or `plugins/<plugin_name>/mcp_config.json`.
+
+**Option 1: Container-Exec Mode (Docker or Podman — No Host Python Required)**
+
+Make sure the `hexstrike-ai` container is running (`docker ps` / `podman ps`), then add the following to `~/.gemini/config/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "hexstrike-ai": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "hexstrike-ai",
+        "python3",
+        "/app/hexstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888"
+      ]
+    }
+  }
+}
+```
+*(If you use Podman, replace `"command": "docker"` with `"command": "podman"`.)*
+
+**Option 2: Host Python Bridge Mode**
+
+If you have `fastmcp` and `requests` installed in a local Python environment on your host and the container is publishing port `8888`:
+
+```json
+{
+  "mcpServers": {
+    "hexstrike-ai": {
+      "command": "python3",
+      "args": [
+        "/absolute/path/to/Hexstrike-AI/hexstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888"
+      ]
+    }
+  }
+}
+```
+
+**Verifying in Google Antigravity:**
+1. Open Google Antigravity and navigate to **Additional Options (`...`) > MCP Servers** to confirm `hexstrike-ai` is connected and its tools are discovered.
+2. In the chat, ask: *"Check the HexStrike server health and list which security tools are installed in the container."* (Antigravity will invoke `server_health` and `get_available_tools`).
+
+---
+
+#### Connecting to Claude Code (`claude` CLI)
+
+You can register the containerized HexStrike AI MCP server in **Claude Code** either with the `claude mcp add` CLI command or via a `.mcp.json` configuration file.
+
+**Option 1: One-Command CLI Setup (`claude mcp add`)**
+
+```bash
+# Container-Exec Mode with Docker (no host Python dependencies needed)
+claude mcp add hexstrike-ai -- docker exec -i hexstrike-ai python3 /app/hexstrike_mcp.py --server http://127.0.0.1:8888
+
+# Container-Exec Mode with Podman
+claude mcp add hexstrike-ai -- podman exec -i hexstrike-ai python3 /app/hexstrike_mcp.py --server http://127.0.0.1:8888
+
+# Or Host Python Bridge Mode (connecting to container port 8888)
+claude mcp add hexstrike-ai -- python3 /absolute/path/to/Hexstrike-AI/hexstrike_mcp.py --server http://127.0.0.1:8888
+```
+
+> **Tip**: Add `--scope user` (e.g., `claude mcp add --scope user hexstrike-ai -- ...`) to make HexStrike AI available across all your projects in Claude Code, or `--scope project` to save it to `.mcp.json` in the current repository.
+
+**Option 2: Project `.mcp.json` or Global `~/.claude.json`**
+
+Create or edit `.mcp.json` at the root of your workspace (or `~/.claude.json` for global configuration):
+
+```json
+{
+  "mcpServers": {
+    "hexstrike-ai": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "hexstrike-ai",
+        "python3",
+        "/app/hexstrike_mcp.py",
+        "--server",
+        "http://127.0.0.1:8888"
+      ]
+    }
+  }
+}
+```
+*(Replace `"docker"` with `"podman"` when running with Podman, or use `"command": "python3"` with `"/absolute/path/to/Hexstrike-AI/hexstrike_mcp.py"` for Host Python Mode.)*
+
+**Verifying in Claude Code:**
+```bash
+# Verify registered MCP servers from your terminal
+claude mcp list
+
+# Or inside an interactive Claude Code session, run:
+/mcp
 ```
 
 ---
